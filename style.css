@@ -179,3 +179,24 @@ input, select {
 
 .hidden { display: none !important; }
 .error-msg { color: var(--danger); margin-top: 10px; font-size: 0.85rem; }
+
+.form-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.status-msg {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.status-msg.success { background: #d1fae5; color: #065f46; }
+.status-msg.error { background: #fee2e2; color: #991b1b; }
