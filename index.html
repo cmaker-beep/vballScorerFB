@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Volleyball Scorekeeper</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Volleyball Scorekeeper</h1>
+      <div class="match-info">
+        <span id="set-display">Set 1</span>
+        <button id="reset-btn" class="btn secondary">Reset Game</button>
+      </div>
+    </header>
+
+    <main class="scoreboard">
+      <!-- Team A Card -->
+      <section class="team-card" id="team-a-card">
+        <h2 id="team-a-name" contenteditable="true">Home Team</h2>
+        <div class="score-display" id="score-a">0</div>
+        <div class="sets-won">Sets Won: <span id="sets-a">0</span></div>
+        <div class="controls">
+          <button class="btn add-point" data-team="a">+1 Point</button>
+          <button class="btn sub-point" data-team="a">-1 Point</button>
+        </div>
+      </section>
+
+      <!-- Team B Card -->
+      <section class="team-card" id="team-b-card">
+        <h2 id="team-b-name" contenteditable="true">Away Team</h2>
+        <div class="score-display" id="score-b">0</div>
+        <div class="sets-won">Sets Won: <span id="sets-b">0</span></div>
+        <div class="controls">
+          <button class="btn add-point" data-team="b">+1 Point</button>
+          <button class="btn sub-point" data-team="b">-1 Point</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Match Log / Firebase Status -->
+    <section class="status-panel">
+      <div id="db-status">Status: Initializing Firebase...</div>
+      <div id="winner-banner" class="hidden"></div>
+    </section>
+  </div>
+
+  <!-- Firebase & App Script (ES Module context required for Firebase imports) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
