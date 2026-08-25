@@ -278,3 +278,26 @@ input, select {
   display: flex;
   justify-content: space-between;
 }
+
+.portal-container {
+  max-width: 600px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.margin-top-sm {
+  margin-top: 10px;
+}
+
+.set-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+}
