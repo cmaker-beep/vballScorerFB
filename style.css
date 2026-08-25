@@ -301,3 +301,14 @@ input, select {
   font-size: 1.1rem;
   color: var(--text-muted);
 }
+
+/* Ensure inputs and selects are explicitly clickable */
+input, select, button {
+  pointer-events: auto !important;
+}
+
+/* Ensure disabled class only affects intended scoreboards */
+.scoreboard.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
