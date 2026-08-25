@@ -112,17 +112,19 @@
 
     <!-- VIEW 2: Coach Scoring System (Full Controls) -->
     <main id="coach-scoring-section" class="hidden">
-      <section class="card">
-        <h2>Coach Scoring Panel</h2>
-        <div class="form-group inline margin-top-sm">
-          <label for="coach-match-select">Active Match:</label>
-          <select id="coach-match-select">
-            <option value="">-- Select Match to Score --</option>
-          </select>
-          <a href="add-match.html" class="btn secondary">➕ Create Match</a>
-        </div>
-      </section>
-
+      <!-- Inside <main id="coach-scoring-section"> -->
+<section class="card">
+  <h2>Coach Scoring Panel</h2>
+  <div class="form-group inline margin-top-sm">
+    <label for="coach-match-select">Active Match:</label>
+    <select id="coach-match-select">
+      <option value="">-- Select Match to Score --</option>
+    </select>
+    <!-- Action Buttons -->
+    <a href="add-match.html" class="btn secondary">➕ Create Match</a>
+    <a href="setup.html" class="btn secondary">⚙️ Admin Setup</a>
+  </div>
+</section>
       <section id="coach-scoreboard-view" class="scoreboard disabled">
         <!-- Team A Controls -->
         <div class="team-card">
