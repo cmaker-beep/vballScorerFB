@@ -11,20 +11,20 @@
     <header>
       <h1>Volleyball Scorekeeper</h1>
       
-      <!-- User Profile Header (Visible when logged in) -->
+      <!-- Profile display when authenticated -->
       <div id="user-profile" class="hidden">
         <span id="user-email"></span>
         <button id="logout-btn" class="btn secondary">Logout</button>
       </div>
     </header>
 
-    <!-- Email/Password Auth Form (Visible when logged out) -->
-    <div id="auth-section" class="auth-card">
+    <!-- Authentication Card (Email/Password) -->
+    <div id="auth-section" class="card auth-card">
       <h2 id="auth-title">Sign In</h2>
       <form id="auth-form">
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="coach@team.com" required />
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="official@school.edu" required />
         </div>
         <div class="form-group">
           <label for="password">Password</label>
@@ -39,42 +39,61 @@
       <div id="auth-error" class="error-msg hidden"></div>
     </div>
 
-    <!-- Main Scoreboard (Hidden until authenticated) -->
+    <!-- Main Scoreboard Workspace (Hidden until authenticated) -->
     <div id="main-content" class="hidden">
-      <div class="match-info">
-        <span id="set-display">Set 1</span>
-        <button id="reset-btn" class="btn secondary">Reset Game</button>
-      </div>
+      
+      <!-- Match Selection Dropdown & Metadata Bar -->
+      <section class="card match-selector-card">
+        <div class="form-group inline">
+          <label for="match-select">Select Active Match:</label>
+          <select id="match-select">
+            <option value="">-- Choose a Match --</option>
+          </select>
+        </div>
+        
+        <div id="match-meta-details" class="meta-details hidden">
+          <span class="badge" id="meta-division">Division: -</span>
+          <span class="badge" id="meta-court">Court: -</span>
+          <span class="badge" id="meta-official">Official: -</span>
+          <span class="badge status-badge" id="meta-status">Status: -</span>
+        </div>
+      </section>
 
-      <main class="scoreboard">
-        <!-- Team A Card -->
+      <!-- Active Scoreboard Display -->
+      <main id="scoreboard-view" class="scoreboard disabled">
+        
+        <!-- Team A -->
         <section class="team-card" id="team-a-card">
-          <h2 id="team-a-name" contenteditable="true">Home Team</h2>
+          <h2 id="team-a-name">Home Team</h2>
           <div class="score-display" id="score-a">0</div>
-          <div class="sets-won">Sets Won: <span id="sets-a">0</span></div>
           <div class="controls">
-            <button class="btn add-point" data-team="a">+1 Point</button>
-            <button class="btn sub-point" data-team="a">-1 Point</button>
+            <button class="btn score-btn add-point" data-team="A" data-delta="1">+1 Point</button>
+            <button class="btn score-btn sub-point" data-team="A" data-delta="-1">-1 Point</button>
           </div>
         </section>
 
-        <!-- Team B Card -->
+        <!-- Divider / Set Info -->
+        <div class="match-center-info">
+          <div id="set-display">Match Scoring</div>
+          <button id="reset-btn" class="btn warning">Reset Score</button>
+        </div>
+
+        <!-- Team B -->
         <section class="team-card" id="team-b-card">
-          <h2 id="team-b-name" contenteditable="true">Away Team</h2>
+          <h2 id="team-b-name">Away Team</h2>
           <div class="score-display" id="score-b">0</div>
-          <div class="sets-won">Sets Won: <span id="sets-b">0</span></div>
           <div class="controls">
-            <button class="btn add-point" data-team="b">+1 Point</button>
-            <button class="btn sub-point" data-team="b">-1 Point</button>
+            <button class="btn score-btn add-point" data-team="B" data-delta="1">+1 Point</button>
+            <button class="btn score-btn sub-point" data-team="B" data-delta="-1">-1 Point</button>
           </div>
         </section>
       </main>
 
-      <!-- Status Panel -->
-      <section class="status-panel">
-        <div id="db-status">Status: Connecting...</div>
-        <div id="winner-banner" class="hidden"></div>
-      </section>
+      <!-- Sync Status Footer -->
+      <footer class="status-panel">
+        <div id="db-status">Database Status: Ready</div>
+        <div id="last-updated">Last Updated: Never</div>
+      </footer>
     </div>
   </div>
 
