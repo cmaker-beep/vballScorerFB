@@ -12,7 +12,9 @@ import {
   getDoc,
   collection, 
   onSnapshot, 
-  updateDoc 
+  updateDoc,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -29,16 +31,22 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // DOM Elements
-const authSection = document.getElementById("auth-section");
-const mainContent = document.getElementById("main-content");
+const showLoginBtn = document.getElementById("show-login-btn");
+const loginModal = document.getElementById("login-modal");
+const closeModalBtn = document.getElementById("close-modal-btn");
+const userProfile = document.getElementById("user-profile");
+const userEmailDisplay = document.getElementById("user-email");
+const logoutBtn = document.getElementById("logout-btn");
+const dashboardBtn = document.getElementById("dashboard-btn");
+
 const authForm = document.getElementById("auth-form");
 const authTitle = document.getElementById("auth-title");
 const authSubmitBtn = document.getElementById("auth-submit-btn");
 const toggleAuthBtn = document.getElementById("toggle-auth-mode");
 const authError = document.getElementById("auth-error");
-const userProfile = document.getElementById("user-profile");
-const userEmailDisplay = document.getElementById("user-email");
-const logoutBtn = document.getElementById("logout-btn");
+
+const publicScoreboard = document.getElementById("public-scoreboard-section");
+const coachDashboard = document.getElementById("coach-dashboard-section");
 
 const matchSelect = document.getElementById("match-select");
 const matchMetaDetails = document.getElementById("match-meta-details");
@@ -54,6 +62,12 @@ const scoreADisplay = document.getElementById("score-a");
 const scoreBDisplay = document.getElementById("score-b");
 const dbStatus = document.getElementById("db-status");
 const lastUpdatedDisplay = document.getElementById("last-updated");
+
+const coachScoreControl = document.getElementById("coach-score-control");
+const manageScoreCard = document.getElementById("manage-score-card");
+const pastResultsCard = document.getElementById("past-results-card");
+const pastMatchesSection = document.getElementById("past-matches-section");
+const pastMatchesList = document.getElementById("past-matches-list");
 const resetBtn = document.getElementById("reset-btn");
 
 let isSignUp = false;
@@ -61,54 +75,77 @@ let currentMatchId = null;
 let matchUnsubscribe = null;
 let currentScores = { teamAScore: 0, teamBScore: 0 };
 
-// Authentication Toggle
-toggleAuthBtn.addEventListener("click", () => {
-  isSignUp = !isSignUp;
-  authTitle.textContent = isSignUp ? "Sign Up" : "Sign In";
-  authSubmitBtn.textContent = isSignUp ? "Sign Up" : "Sign In";
-  document.getElementById("auth-toggle-text").textContent = isSignUp ? "Already have an account?" : "Need an account?";
-  toggleAuthBtn.textContent = isSignUp ? "Sign In" : "Sign Up";
-});
+// Modal & Auth Setup
+if (showLoginBtn) showLoginBtn.addEventListener("click", () => loginModal.classList.remove("hidden"));
+if (closeModalBtn) closeModalBtn.addEventListener("click", () => loginModal.classList.add("hidden"));
 
-// Authentication Handler
-authForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  authError.classList.add("hidden");
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+if (toggleAuthBtn) {
+  toggleAuthBtn.addEventListener("click", () => {
+    isSignUp = !isSignUp;
+    authTitle.textContent = isSignUp ? "Coach Sign Up" : "Coach Login";
+    authSubmitBtn.textContent = isSignUp ? "Sign Up" : "Sign In";
+    document.getElementById("auth-toggle-text").textContent = isSignUp ? "Already have an account?" : "Need an account?";
+    toggleAuthBtn.textContent = isSignUp ? "Sign In" : "Sign Up";
+  });
+}
 
-  try {
-    if (isSignUp) {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } else {
-      await signInWithEmailAndPassword(auth, email, password);
+if (authForm) {
+  authForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (authError) authError.classList.add("hidden");
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      if (isSignUp) {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+      loginModal.classList.add("hidden");
+    } catch (error) {
+      if (authError) {
+        authError.textContent = error.message;
+        authError.classList.remove("hidden");
+      }
     }
-  } catch (error) {
-    authError.textContent = error.message;
-    authError.classList.remove("hidden");
-  }
-});
+  });
+}
 
-logoutBtn.addEventListener("click", () => signOut(auth));
+if (logoutBtn) logoutBtn.addEventListener("click", () => signOut(auth));
 
-// Auth State Listener
+if (dashboardBtn) {
+  dashboardBtn.addEventListener("click", () => {
+    publicScoreboard.classList.add("hidden");
+    coachDashboard.classList.remove("hidden");
+  });
+}
+
+// Authentication State Listener (Safe Guarded against Null Elements)
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    authSection.classList.add("hidden");
-    mainContent.classList.remove("hidden");
-    userProfile.classList.remove("hidden");
-    userEmailDisplay.textContent = user.email;
-    loadMatches();
+    if (showLoginBtn) showLoginBtn.classList.add("hidden");
+    if (userProfile) userProfile.classList.remove("hidden");
+    if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+    
+    // Default logged-in coaches to Dashboard view
+    if (publicScoreboard) publicScoreboard.classList.add("hidden");
+    if (coachDashboard) coachDashboard.classList.remove("hidden");
   } else {
-    authSection.classList.remove("hidden");
-    mainContent.classList.add("hidden");
-    userProfile.classList.add("hidden");
-    if (matchUnsubscribe) matchUnsubscribe();
+    if (showLoginBtn) showLoginBtn.classList.remove("hidden");
+    if (userProfile) userProfile.classList.add("hidden");
+    
+    // Public guest view
+    if (publicScoreboard) publicScoreboard.classList.remove("hidden");
+    if (coachDashboard) coachDashboard.classList.add("hidden");
   }
+  loadMatches();
 });
 
-// Fetch Available Matches
+// Load Matches into Selector Dropdown
 function loadMatches() {
+  if (!matchSelect) return;
+  
   onSnapshot(collection(db, "matches"), (snapshot) => {
     matchSelect.innerHTML = '<option value="">-- Choose a Match --</option>';
     snapshot.forEach((docSnap) => {
@@ -123,47 +160,48 @@ function loadMatches() {
   });
 }
 
-// Select Active Match & Subscribe to Real-Time Updates
-matchSelect.addEventListener("change", async (e) => {
-  currentMatchId = e.target.value;
-  if (matchUnsubscribe) matchUnsubscribe();
+// Listen for Match Selection
+if (matchSelect) {
+  matchSelect.addEventListener("change", (e) => {
+    currentMatchId = e.target.value;
+    if (matchUnsubscribe) matchUnsubscribe();
 
-  if (!currentMatchId) {
-    scoreboardView.classList.add("disabled");
-    matchMetaDetails.classList.add("hidden");
-    return;
-  }
-
-  scoreboardView.classList.remove("disabled");
-  matchMetaDetails.classList.remove("hidden");
-
-  // Subscribe to Match Document
-  matchUnsubscribe = onSnapshot(doc(db, "matches", currentMatchId), async (matchSnap) => {
-    if (!matchSnap.exists()) return;
-    const matchData = matchSnap.data();
-
-    // Populate Teams and Embedded Scores
-    teamAName.textContent = matchData.teamA || "Home Team";
-    teamBName.textContent = matchData.teamB || "Away Team";
-    
-    currentScores = matchData.score || { teamAScore: 0, teamBScore: 0 };
-    scoreADisplay.textContent = currentScores.teamAScore ?? 0;
-    scoreBDisplay.textContent = currentScores.teamBScore ?? 0;
-    metaStatus.textContent = `Status: ${matchData.status || "N/A"}`;
-    
-    if (currentScores.lastUpdated) {
-      lastUpdatedDisplay.textContent = `Last Updated: ${new Date(currentScores.lastUpdated).toLocaleTimeString()}`;
+    if (!currentMatchId) {
+      if (scoreboardView) scoreboardView.classList.add("disabled");
+      if (matchMetaDetails) matchMetaDetails.classList.add("hidden");
+      return;
     }
 
-    // Resolve Foreign References (divisions, courts, officials)
-    fetchReference(matchData.divisionId, "divisions", "divisionName", metaDivision, "Division");
-    fetchReference(matchData.courtId, "courts", "courtName", metaCourt, "Court");
-    fetchReference(matchData.officialId, "officials", ["firstName", "lastName"], metaOfficial, "Official");
-  });
-});
+    if (scoreboardView) scoreboardView.classList.remove("disabled");
+    if (matchMetaDetails) matchMetaDetails.classList.remove("hidden");
 
-// Helper to Resolve Document References
+    // Live Snapshot Listener for Scores
+    matchUnsubscribe = onSnapshot(doc(db, "matches", currentMatchId), (matchSnap) => {
+      if (!matchSnap.exists()) return;
+      const matchData = matchSnap.data();
+
+      if (teamAName) teamAName.textContent = matchData.teamA || "Home Team";
+      if (teamBName) teamBName.textContent = matchData.teamB || "Away Team";
+      
+      currentScores = matchData.score || { teamAScore: 0, teamBScore: 0 };
+      if (scoreADisplay) scoreADisplay.textContent = currentScores.teamAScore ?? 0;
+      if (scoreBDisplay) scoreBDisplay.textContent = currentScores.teamBScore ?? 0;
+      if (metaStatus) metaStatus.textContent = `Status: ${matchData.status || "N/A"}`;
+      
+      if (currentScores.lastUpdated && lastUpdatedDisplay) {
+        lastUpdatedDisplay.textContent = `Last Updated: ${new Date(currentScores.lastUpdated).toLocaleTimeString()}`;
+      }
+
+      fetchReference(matchData.divisionId, "divisions", "divisionName", metaDivision, "Division");
+      fetchReference(matchData.courtId, "courts", "courtName", metaCourt, "Court");
+      fetchReference(matchData.officialId, "officials", ["firstName", "lastName"], metaOfficial, "Official");
+    });
+  });
+}
+
+// Fetch Reference Details (Divisions, Courts, Officials)
 async function fetchReference(id, collectionName, field, targetElement, label) {
+  if (!targetElement) return;
   if (!id) {
     targetElement.textContent = `${label}: N/A`;
     return;
@@ -185,10 +223,13 @@ async function fetchReference(id, collectionName, field, targetElement, label) {
   }
 }
 
-// Adjust Scores
+// Coach Scoring Buttons
 document.querySelectorAll(".score-btn").forEach((btn) => {
   btn.addEventListener("click", async (e) => {
-    if (!currentMatchId) return;
+    if (!currentMatchId) {
+      alert("Please select a match from the selector first!");
+      return;
+    }
 
     const team = e.target.getAttribute("data-team");
     const delta = parseInt(e.target.getAttribute("data-delta"), 10);
@@ -199,7 +240,7 @@ document.querySelectorAll(".score-btn").forEach((btn) => {
     if (team === "A") newAScore = Math.max(0, newAScore + delta);
     if (team === "B") newBScore = Math.max(0, newBScore + delta);
 
-    dbStatus.textContent = "Database Status: Syncing...";
+    if (dbStatus) dbStatus.textContent = "Status: Syncing...";
 
     try {
       await updateDoc(doc(db, "matches", currentMatchId), {
@@ -209,27 +250,76 @@ document.querySelectorAll(".score-btn").forEach((btn) => {
           lastUpdated: new Date().toISOString()
         }
       });
-      dbStatus.textContent = "Database Status: Synced";
+      if (dbStatus) dbStatus.textContent = "Status: Synced";
     } catch (error) {
-      dbStatus.textContent = "Database Status: Error Updating";
+      if (dbStatus) dbStatus.textContent = "Status: Sync Error";
       console.error("Score update error:", error);
     }
   });
 });
 
-// Reset Score
-resetBtn.addEventListener("click", async () => {
-  if (!currentMatchId || !confirm("Reset current match score to 0-0?")) return;
-  
+// Dashboard Section Toggles
+if (manageScoreCard) {
+  manageScoreCard.addEventListener("click", () => {
+    if (coachScoreControl) coachScoreControl.classList.toggle("hidden");
+    if (publicScoreboard) publicScoreboard.classList.remove("hidden");
+  });
+}
+
+if (pastResultsCard) {
+  pastResultsCard.addEventListener("click", () => {
+    if (pastMatchesSection) {
+      pastMatchesSection.classList.toggle("hidden");
+      loadPastResults();
+    }
+  });
+}
+
+// Load Past Results (Completed Matches)
+async function loadPastResults() {
+  if (!pastMatchesList) return;
+  pastMatchesList.innerHTML = "<li>Loading past matches...</li>";
+
   try {
-    await updateDoc(doc(db, "matches", currentMatchId), {
-      score: {
-        teamAScore: 0,
-        teamBScore: 0,
-        lastUpdated: new Date().toISOString()
-      }
+    const q = query(collection(db, "matches"), where("status", "==", "Completed"));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      pastMatchesList.innerHTML = "<li>No completed matches found.</li>";
+      return;
+    }
+
+    pastMatchesList.innerHTML = "";
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      const score = data.score || { teamAScore: 0, teamBScore: 0 };
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <strong>${data.teamA} (${score.teamAScore}) vs ${data.teamB} (${score.teamBScore})</strong>
+        <span>Status: ${data.status}</span>
+      `;
+      pastMatchesList.appendChild(li);
     });
   } catch (error) {
-    console.error("Reset score error:", error);
+    pastMatchesList.innerHTML = `<li>Error loading past results: ${error.message}</li>`;
   }
-});
+}
+
+// Reset Score Button
+if (resetBtn) {
+  resetBtn.addEventListener("click", async () => {
+    if (!currentMatchId || !confirm("Reset current match score to 0-0?")) return;
+    
+    try {
+      await updateDoc(doc(db, "matches", currentMatchId), {
+        score: {
+          teamAScore: 0,
+          teamBScore: 0,
+          lastUpdated: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error("Reset score error:", error);
+    }
+  });
+}
