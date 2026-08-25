@@ -25,19 +25,26 @@ const officialSelect = document.getElementById("official-select");
 const addMatchForm = document.getElementById("add-match-form");
 const messageDiv = document.getElementById("form-message");
 
-// Populate Reference Dropdowns on Load
+// Safe Dropdown Loader
 async function loadDropdowns() {
-  await Promise.all([
-    fetchOptions("divisions", divisionSelect, "divisionName", "division_001"),
-    fetchOptions("courts", courtSelect, "courtName", "court_001"),
-    fetchOptions("officials", officialSelect, ["firstName", "lastName"], "official_001")
-  ]);
+  try {
+    await Promise.allSettled([
+      fetchOptions("divisions", divisionSelect, "divisionName", "division_001"),
+      fetchOptions("courts", courtSelect, "courtName", "court_001"),
+      fetchOptions("officials", officialSelect, ["firstName", "lastName"], "official_001")
+    ]);
+  } catch (e) {
+    console.warn("Dropdown loading completed with errors:", e);
+  }
 }
 
 async function fetchOptions(collectionName, selectElement, nameFields, fallbackId) {
-  selectElement.innerHTML = "";
+  if (!selectElement) return;
+
   try {
     const querySnapshot = await getDocs(collection(db, collectionName));
+    selectElement.innerHTML = "";
+
     if (querySnapshot.empty) {
       selectElement.innerHTML = `<option value="${fallbackId}">Default ${collectionName} (${fallbackId})</option>`;
       return;
@@ -48,7 +55,8 @@ async function fetchOptions(collectionName, selectElement, nameFields, fallbackI
       let displayName = docSnap.id;
       
       if (Array.isArray(nameFields)) {
-        displayName = nameFields.map(f => data[f] || "").join(" ").trim() || docSnap.id;
+        const full = nameFields.map(f => data[f] || "").join(" ").trim();
+        if (full) displayName = full;
       } else if (data[nameFields]) {
         displayName = data[nameFields];
       }
@@ -60,48 +68,57 @@ async function fetchOptions(collectionName, selectElement, nameFields, fallbackI
     });
   } catch (err) {
     console.warn(`Could not load ${collectionName}, using fallback:`, err);
-    selectElement.innerHTML = `<option value="${fallbackId}">${fallbackId}</option>`;
+    selectElement.innerHTML = `<option value="${fallbackId}">Default ${collectionName} (${fallbackId})</option>`;
   }
 }
 
-// Form Submission
-addMatchForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  
-  const teamA = document.getElementById("team-a").value.trim();
-  const teamB = document.getElementById("team-b").value.trim();
-  const matchTimeRaw = document.getElementById("match-time").value;
-  const status = document.getElementById("match-status").value;
+// Safe Form Submission Listener
+if (addMatchForm) {
+  addMatchForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const teamAEl = document.getElementById("team-a");
+    const teamBEl = document.getElementById("team-b");
+    const matchTimeEl = document.getElementById("match-time");
+    const statusEl = document.getElementById("match-status");
 
-  const newMatch = {
-    divisionId: divisionSelect.value,
-    courtId: courtSelect.value,
-    officialId: officialSelect.value,
-    teamA: teamA,
-    teamB: teamB,
-    matchTime: new Date(matchTimeRaw).toISOString(),
-    status: status,
-    score: {
-      teamAScore: 0,
-      teamBScore: 0,
-      lastUpdated: new Date().toISOString()
+    const teamA = teamAEl ? teamAEl.value.trim() : "";
+    const teamB = teamBEl ? teamBEl.value.trim() : "";
+    const matchTimeRaw = matchTimeEl ? matchTimeEl.value : "";
+    const status = statusEl ? statusEl.value : "Scheduled";
+
+    const newMatch = {
+      divisionId: divisionSelect?.value || "division_001",
+      courtId: courtSelect?.value || "court_001",
+      officialId: officialSelect?.value || "official_001",
+      teamA: teamA,
+      teamB: teamB,
+      matchTime: matchTimeRaw ? new Date(matchTimeRaw).toISOString() : new Date().toISOString(),
+      status: status,
+      score: {
+        teamAScore: 0,
+        teamBScore: 0,
+        lastUpdated: new Date().toISOString()
+      }
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, "matches"), newMatch);
+      showMessage(`Match created successfully with ID: ${docRef.id}`, "success");
+      addMatchForm.reset();
+    } catch (error) {
+      console.error("Error adding match: ", error);
+      showMessage(`Error saving match: ${error.message}`, "error");
     }
-  };
-
-  try {
-    const docRef = await addDoc(collection(db, "matches"), newMatch);
-    showMessage(`Match created successfully with ID: ${docRef.id}`, "success");
-    addMatchForm.reset();
-  } catch (error) {
-    console.error("Error adding match: ", error);
-    showMessage(`Error saving match: ${error.message}`, "error");
-  }
-});
+  });
+}
 
 function showMessage(msg, type) {
+  if (!messageDiv) return;
   messageDiv.textContent = msg;
   messageDiv.className = `status-msg ${type}`;
   messageDiv.classList.remove("hidden");
 }
 
+// Run Dropdown Initializer
 loadDropdowns();
