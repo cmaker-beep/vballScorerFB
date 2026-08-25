@@ -1,0 +1,181 @@
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-color: #f1f5f9;
+  --card-bg: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --danger: #ef4444;
+  --success: #10b981;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 900px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.auth-card {
+  max-width: 400px;
+  margin: 40px auto;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group.inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.btn.primary { background: var(--primary); color: white; width: 100%; }
+.btn.primary:hover { background: var(--primary-hover); }
+.btn.secondary { background: var(--border); color: var(--text); }
+.btn.warning { background: #f59e0b; color: white; }
+
+.auth-toggle {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap: 15px;
+  align-items: center;
+}
+
+.scoreboard.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.team-card {
+  background: var(--card-bg);
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.score-display {
+  font-size: 4rem;
+  font-weight: 800;
+  margin: 10px 0;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.score-btn {
+  flex: 1;
+  padding: 12px;
+}
+
+.add-point { background: var(--success); color: white; }
+.sub-point { background: var(--danger); color: white; }
+
+.match-center-info {
+  text-align: center;
+}
+
+.meta-details {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.badge {
+  background: #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-panel {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.hidden { display: none !important; }
+.error-msg { color: var(--danger); margin-top: 10px; font-size: 0.85rem; }
