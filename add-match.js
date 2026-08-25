@@ -18,55 +18,55 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// DOM Elements
 const divisionSelect = document.getElementById("division-select");
 const courtSelect = document.getElementById("court-select");
 const officialSelect = document.getElementById("official-select");
 const addMatchForm = document.getElementById("add-match-form");
 const messageDiv = document.getElementById("form-message");
 
-// Real-Time Listener Helper
-function listenToCollection(collectionName, selectElement, nameFields, defaultLabel) {
-  if (!selectElement) return;
+function listenAndDebug(collectionName, selectElement, defaultLabel) {
+  if (!selectElement) {
+    console.error(`Select element for ${collectionName} was NOT found in DOM! Check HTML IDs.`);
+    return;
+  }
 
   onSnapshot(collection(db, collectionName), (snapshot) => {
+    console.log(`📡 Realtime fetch for [${collectionName}]: Found ${snapshot.size} documents.`);
+    
     selectElement.innerHTML = `<option value="">-- Select ${defaultLabel} --</option>`;
 
     if (snapshot.empty) {
+      console.warn(`⚠️ Collection "${collectionName}" is completely empty in Firestore.`);
       selectElement.innerHTML = `<option value="">No ${defaultLabel}s found in database</option>`;
       return;
     }
 
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      let displayName = "";
+      console.log(`Document ID (${docSnap.id}) in [${collectionName}]:`, data);
 
-      if (Array.isArray(nameFields)) {
-        displayName = nameFields.map(f => data[f] || "").join(" ").trim();
-      } else {
-        displayName = data[nameFields] || "";
-      }
-
-      // Fallback if field name was blank
-      if (!displayName) displayName = docSnap.id;
+      // Try multiple field variations
+      const displayName = data.divisionName || data.courtName || 
+                          (data.firstName ? `${data.firstName} ${data.lastName || ''}` : null) || 
+                          data.name || docSnap.id;
 
       const option = document.createElement("option");
-      option.value = docSnap.id; // Store Doc ID as the value
-      option.textContent = displayName; // Display human-readable name
+      option.value = docSnap.id;
+      option.textContent = displayName;
       selectElement.appendChild(option);
     });
-  }, (err) => {
-    console.error(`Error loading ${collectionName}:`, err);
-    selectElement.innerHTML = `<option value="">Error loading ${defaultLabel}s</option>`;
+  }, (error) => {
+    console.error(`❌ Firestore Error on collection [${collectionName}]:`, error);
+    selectElement.innerHTML = `<option value="">Permission Error / Failed to load</option>`;
   });
 }
 
-// Attach Real-time Listeners
-listenToCollection("divisions", divisionSelect, "divisionName", "Division");
-listenToCollection("courts", courtSelect, "courtName", "Court");
-listenToCollection("officials", officialSelect, ["firstName", "lastName"], "Official");
+// Start Listeners
+listenAndDebug("divisions", divisionSelect, "Division");
+listenAndDebug("courts", courtSelect, "Court");
+listenAndDebug("officials", officialSelect, "Official");
 
-// Safe Form Submission
+// Submit Handler
 if (addMatchForm) {
   addMatchForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -77,7 +77,7 @@ if (addMatchForm) {
     const statusEl = document.getElementById("match-status");
 
     if (!divisionSelect?.value) {
-      showMessage("Please select a valid division.", "error");
+      showMessage("Please select a division.", "error");
       return;
     }
 
@@ -89,20 +89,16 @@ if (addMatchForm) {
       teamB: teamBEl ? teamBEl.value.trim() : "",
       matchTime: matchTimeEl?.value ? new Date(matchTimeEl.value).toISOString() : new Date().toISOString(),
       status: statusEl ? statusEl.value : "Scheduled",
-      score: {
-        teamAScore: 0,
-        teamBScore: 0,
-        lastUpdated: new Date().toISOString()
-      }
+      score: { teamAScore: 0, teamBScore: 0, lastUpdated: new Date().toISOString() }
     };
 
     try {
       const docRef = await addDoc(collection(db, "matches"), newMatch);
-      showMessage(`Match created successfully! ID: ${docRef.id}`, "success");
+      showMessage(`Match created! ID: ${docRef.id}`, "success");
       addMatchForm.reset();
-    } catch (error) {
-      console.error("Error creating match:", error);
-      showMessage(`Error saving match: ${error.message}`, "error");
+    } catch (err) {
+      console.error("Match save error:", err);
+      showMessage(`Error: ${err.message}`, "error");
     }
   });
 }
