@@ -11,43 +11,50 @@
     <header>
       <h1>Volleyball Scorekeeper</h1>
       
-      <!-- Profile display when authenticated -->
-      <div id="user-profile" class="hidden">
-        <span id="user-email"></span>
-        <button id="logout-btn" class="btn secondary">Logout</button>
+      <!-- Top Right Auth Navigation -->
+      <div id="auth-nav">
+        <button id="show-login-btn" class="btn primary">Coach Login</button>
+        <div id="user-profile" class="hidden">
+          <span id="user-email"></span>
+          <button id="dashboard-btn" class="btn secondary">Coach Dashboard</button>
+          <button id="logout-btn" class="btn warning">Logout</button>
+        </div>
       </div>
     </header>
 
-    <!-- Authentication Card (Email/Password) -->
-    <div id="auth-section" class="card auth-card">
-      <h2 id="auth-title">Sign In</h2>
-      <form id="auth-form">
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" placeholder="official@school.edu" required />
+    <!-- Modal Login Card for Coaches -->
+    <div id="login-modal" class="modal hidden">
+      <div class="card auth-card">
+        <div class="modal-header">
+          <h2 id="auth-title">Coach Login</h2>
+          <button id="close-modal-btn" class="close-btn">&times;</button>
         </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" placeholder="••••••••" required />
+        <form id="auth-form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="coach@school.edu" required />
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••" required />
+          </div>
+          <button type="submit" id="auth-submit-btn" class="btn primary">Sign In</button>
+        </form>
+        <div class="auth-toggle">
+          <span id="auth-toggle-text">Need an account?</span>
+          <button type="button" id="toggle-auth-mode" class="link-btn">Sign Up</button>
         </div>
-        <button type="submit" id="auth-submit-btn" class="btn primary">Sign In</button>
-      </form>
-      <div class="auth-toggle">
-        <span id="auth-toggle-text">Need an account?</span>
-        <button type="button" id="toggle-auth-mode" class="link-btn">Sign Up</button>
+        <div id="auth-error" class="error-msg hidden"></div>
       </div>
-      <div id="auth-error" class="error-msg hidden"></div>
     </div>
 
-    <!-- Main Scoreboard Workspace (Hidden until authenticated) -->
-    <div id="main-content" class="hidden">
-      
-      <!-- Match Selection Dropdown & Metadata Bar -->
+    <!-- MAIN VIEW: Public Guest Live Scoreboard -->
+    <main id="public-scoreboard-section">
       <section class="card match-selector-card">
         <div class="form-group inline">
-          <label for="match-select">Select Active Match:</label>
+          <label for="match-select">Select Live Match:</label>
           <select id="match-select">
-            <option value="">-- Choose a Match --</option>
+            <option value="">-- Choose a Match to View --</option>
           </select>
         </div>
         
@@ -59,42 +66,77 @@
         </div>
       </section>
 
-      <!-- Active Scoreboard Display -->
-      <main id="scoreboard-view" class="scoreboard disabled">
-        
-        <!-- Team A -->
-        <section class="team-card" id="team-a-card">
+      <!-- Guest Score View (Read-Only) -->
+      <section id="scoreboard-view" class="scoreboard disabled">
+        <div class="team-card">
           <h2 id="team-a-name">Home Team</h2>
           <div class="score-display" id="score-a">0</div>
-          <div class="controls">
-            <button class="btn score-btn add-point" data-team="A" data-delta="1">+1 Point</button>
-            <button class="btn score-btn sub-point" data-team="A" data-delta="-1">-1 Point</button>
-          </div>
-        </section>
-
-        <!-- Divider / Set Info -->
-        <div class="match-center-info">
-          <div id="set-display">Match Scoring</div>
-          <button id="reset-btn" class="btn warning">Reset Score</button>
         </div>
 
-        <!-- Team B -->
-        <section class="team-card" id="team-b-card">
+        <div class="match-center-info">
+          <div id="set-display">Live Match</div>
+        </div>
+
+        <div class="team-card">
           <h2 id="team-b-name">Away Team</h2>
           <div class="score-display" id="score-b">0</div>
-          <div class="controls">
-            <button class="btn score-btn add-point" data-team="B" data-delta="1">+1 Point</button>
-            <button class="btn score-btn sub-point" data-team="B" data-delta="-1">-1 Point</button>
-          </div>
-        </section>
-      </main>
+        </div>
+      </section>
 
-      <!-- Sync Status Footer -->
       <footer class="status-panel">
-        <div id="db-status">Database Status: Ready</div>
+        <div id="db-status">Status: Ready</div>
         <div id="last-updated">Last Updated: Never</div>
       </footer>
-    </div>
+    </main>
+
+    <!-- COACH DASHBOARD VIEW (Hidden until Coach logs in) -->
+    <main id="coach-dashboard-section" class="hidden">
+      <section class="dashboard-header card">
+        <h2>Coach Dashboard</h2>
+        <p>Welcome back! Select an action or update a live match below.</p>
+      </section>
+
+      <!-- Dashboard Quick Action Cards -->
+      <div class="dashboard-grid">
+        <a href="add-match.html" class="dash-card">
+          <div class="dash-icon">➕</div>
+          <h3>Add New Match</h3>
+          <p>Create upcoming fixtures with divisions, courts, and officials.</p>
+        </a>
+
+        <div class="dash-card" id="manage-score-card">
+          <div class="dash-icon">⏱️</div>
+          <h3>Live Scorekeeper</h3>
+          <p>Control point scoring and update live sets for active matches.</p>
+        </div>
+
+        <div class="dash-card" id="past-results-card">
+          <div class="dash-icon">📊</div>
+          <h3>Past Results</h3>
+          <p>Review final scores and archived match data.</p>
+        </div>
+      </div>
+
+      <!-- Coach Score Control Panel -->
+      <section id="coach-score-control" class="card hidden margin-top">
+        <h3>Live Match Score Controller</h3>
+        <div class="controls-row">
+          <button class="btn score-btn add-point" data-team="A" data-delta="1">+1 Home</button>
+          <button class="btn score-btn sub-point" data-team="A" data-delta="-1">-1 Home</button>
+          <button class="btn warning" id="reset-btn">Reset Match</button>
+          <button class="btn score-btn sub-point" data-team="B" data-delta="-1">-1 Away</button>
+          <button class="btn score-btn add-point" data-team="B" data-delta="1">+1 Away</button>
+        </div>
+      </section>
+
+      <!-- Past Matches List -->
+      <section id="past-matches-section" class="card hidden margin-top">
+        <h3>Past Match Results</h3>
+        <ul id="past-matches-list" class="results-list">
+          <li>Loading completed matches...</li>
+        </ul>
+      </section>
+    </main>
   </div>
 
   <script type="module" src="app.js"></script>
